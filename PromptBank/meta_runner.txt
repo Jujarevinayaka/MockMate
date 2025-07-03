@@ -39,6 +39,7 @@ Once complete, wait for me to say:
 Then continue with:
 - `PromptBank/02_HM.txt`
 - `PromptBank/03_PM.txt`
+- `PromptBank/03_TL.txt`
 - `PromptBank/04_TPM.txt`
 - `PromptBank/05_Man.txt`
 - `PromptBank/06_HR.txt`
