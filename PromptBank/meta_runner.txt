@@ -1,12 +1,13 @@
 <Meta_Context>
-I am a job candidate preparing rigorously for upcoming interviews. As part of my preparation, I’ve created a folder named `PromptBank` which contains six carefully crafted prompt files. Each of these files defines a specific interview simulation role I want you (Gemini) to assume:
+I am a job candidate preparing rigorously for upcoming interviews. As part of my preparation, I’ve created a folder named `PromptBank` which contains seven carefully crafted prompt files. Each of these files defines a specific interview simulation role I want you (Gemini) to assume:
 
 1. Job Fit Analyzer (JFA)
 2. Hiring Manager (HM)
 3. Product Manager (PM)
-4. Technical Product Manager (TPM)
-5. Managerial Interviewer
-6. HR Interviewer
+4. Technical Lead (TL)
+5. Technical Product Manager (TPM)
+6. Managerial Interviewer
+7. HR Interviewer
 
 Each file includes:
 - Role definition
@@ -19,7 +20,7 @@ Each file includes:
 </Meta_Context>
 
 <Task>
-You will now sequentially read and process each of the six prompt files from the `PromptBank` folder. For each file:
+You will now sequentially read and process each of the seven prompt files from the `PromptBank` folder. For each file:
 
 1. Parse the prompt and understand the role you're expected to play.
 2. Wait for me to provide the required input mentioned in the `<User_Input>` section of the prompt.
