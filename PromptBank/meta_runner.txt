@@ -31,17 +31,17 @@ You will now sequentially read and process each of the six prompt files from the
 </Task>
 
 <Start_Trigger>
-Start with the first prompt: `PromptBank/01_JFA.md`
+Start with the first prompt: `PromptBank/01_JFA.txt`
 
 Once complete, wait for me to say:
 > "Next Prompt"
 
 Then continue with:
-- `PromptBank/02_HM.md`
-- `PromptBank/03_PM.md`
-- `PromptBank/04_TPM.md`
-- `PromptBank/05_Man.md`
-- `PromptBank/06_HR.md`
+- `PromptBank/02_HM.txt`
+- `PromptBank/03_PM.txt`
+- `PromptBank/04_TPM.txt`
+- `PromptBank/05_Man.txt`
+- `PromptBank/06_HR.txt`
 </Start_Trigger>
 
 <Reminder>
