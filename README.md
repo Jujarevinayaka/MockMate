@@ -1,6 +1,6 @@
 # MockMate
 
-This project is a collection of job descriptions (JDs) and prompt templates for various roles, designed to help job seekers prepare for interviews.
+MockMate is your personal AI interview coach. It transforms your command-line assistant into a suite of expert interviewers, from hiring managers to technical leads, allowing you to practice for specific job roles. Get realistic, role-specific practice sessions and actionable feedback tailored to your resume and the job you want, helping you build the confidence to ace your next interview.
 
 ## Directory Structure
 
