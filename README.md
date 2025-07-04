@@ -4,15 +4,24 @@ This project is a collection of job descriptions (JDs) and prompt templates for 
 
 ## Directory Structure
 
-- `JDs/`: Contains job descriptions in Markdown format.
+- `JDs/`: **Add your target job description here.**
 - `PromptBank/`: Contains prompt templates for different roles, each designed to simulate a specific interview type.
-- `Resume/`: Contains resume templates.
+- `Resume/`: **Add your resume here.**
 
-## Usage
+## How to Use MockMate
 
-The `PromptBank` directory contains several specialized prompts, each acting as a distinct interview simulator. To use them, you will interact with the AI, providing the requested input (typically a job description and your resume), and the AI will guide you through a mock interview or analysis based on the selected prompt.
+MockMate helps you prepare for interviews by simulating various interview scenarios with an AI.
 
-Here's a breakdown of the available interview simulations:
+### Steps to Get Started:
+
+1.  **Add Your Job Description:** Place the job description you are targeting into the `JDs/` folder. You can replace the existing `Google.md` file or add a new one.
+2.  **Add Your Resume:** Add your own resume to the `Resume/` folder. You can replace the existing `Resume.md` file.
+3.  **Run the Simulations:**
+    *   Paste the path `PromptBank/meta_runner.txt` into a large Gemini CLI. This prompt acts as a controller, guiding the AI through the different interview simulations.
+    *   The AI will start with the first simulation, the **Job Fit Analyzer**, and will ask for the job description and your resume.
+    *   Follow the on-screen instructions. After each simulation, you can say "Next Prompt" to proceed to the next interview type.
+
+### Available Interview Simulations:
 
 -   **01_JFA.txt (Job Fit Analyzer):**
     *   **Role:** Brutally Honest Job Fit Analyzer.
@@ -49,9 +58,6 @@ Here's a breakdown of the available interview simulations:
     *   **Purpose:** Simulates a final HR screening round to evaluate cultural fit, motivation, compensation alignment, communication skills, and ethical awareness.
     *   **Input:** Job description, your resume, preferred location, and compensation expectations.
 
-The `meta_runner.md` file provides instructions on how to sequentially run these interview simulations.
-
 ## Contributing
 
 Contributions are welcome! Please refer to the project's guidelines for contributing.
-
