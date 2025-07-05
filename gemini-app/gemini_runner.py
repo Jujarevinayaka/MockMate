@@ -18,7 +18,7 @@ def run_gemini_in_background(user_input: str, timeout: int = 60) -> tuple[str, s
         A tuple containing the standard output and standard error from the CLI.
     """
     # Ensure the command is cross-platform compatible
-    command = ["gemini"]
+    command = "gemini --model gemini-2.5-flash"
     
     # For Windows, we might need to specify the shell if 'gemini' is a .bat or .cmd file
     # However, for a direct executable in PATH, this is generally not needed.
@@ -73,15 +73,18 @@ def run_gemini_in_background(user_input: str, timeout: int = 60) -> tuple[str, s
 
 def main():
     """
-    Main function to drive the script. Prompts the user for input,
+    Main function to drive the script. Accepts a prompt as a command-line argument,
     runs the Gemini CLI, and prints the results.
     """
     print("Gemini CLI Interactive Python Runner")
     print("------------------------------------")
     
     try:
-        # Prompt the user for their message
-        user_message = input("Please enter your message to send to Gemini:\n> ")
+        if len(sys.argv) > 1:
+            user_message = sys.argv[1]
+        else:
+            print("\nError: No prompt provided. Usage: python gemini_runner.py <prompt>")
+            return
 
         if not user_message.strip():
             print("\nError: Input cannot be empty.")
@@ -110,4 +113,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

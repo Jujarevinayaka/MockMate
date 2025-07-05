@@ -13,6 +13,7 @@
 > * Must be **cross-platform**: fully compatible with **Windows**, **Linux**, and **macOS**.
 > * Use only **standard Python libraries** (e.g., `subprocess`, `sys`, `os`, etc.).
 > * Use `subprocess.Popen` with `stdin`, `stdout`, and `stderr` redirection to communicate with the Gemini CLI.
+> * Use `shell=True` to keep the windows compatibility.
 > * Handle all possible **error scenarios**, such as:
 >
 >   * Gemini CLI not found

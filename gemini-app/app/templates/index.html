@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini CLI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Gemini CLI</h1>
+        <form id="prompt-form">
+            <div class="mb-4">
+                <label for="prompt" class="block text-gray-700 text-sm font-bold mb-2">Enter your prompt:</label>
+                <textarea id="prompt" name="prompt" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+            </div>
+            <div class="flex items-center justify-between">
+                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                    Submit
+                </button>
+                <div id="loader" class="hidden">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
+            </div>
+        </form>
+        <div id="response-container" class="mt-4 hidden">
+            <h2 class="text-2xl font-bold mb-2">Response:</h2>
+            <pre id="response" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"></pre>
+        </div>
+        <div id="error-container" class="mt-4 hidden">
+            <h2 class="text-2xl font-bold mb-2 text-red-500">Error:</h2>
+            <pre id="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"></pre>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prompt-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const prompt = document.getElementById('prompt').value;
+            const loader = document.getElementById('loader');
+            const responseContainer = document.getElementById('response-container');
+            const errorContainer = document.getElementById('error-container');
+            const responseEl = document.getElementById('response');
+            const errorEl = document.getElementById('error');
+
+            loader.classList.remove('hidden');
+            responseContainer.classList.add('hidden');
+            errorContainer.classList.add('hidden');
+
+            try {
+                const formData = new FormData();
+                formData.append('prompt', prompt);
+
+                const response = await fetch('/run-gemini', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseEl.textContent = result.response;
+                    responseContainer.classList.remove('hidden');
+                } else {
+                    errorEl.textContent = result.error;
+                    errorContainer.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorEl.textContent = 'An unexpected error occurred.';
+                errorContainer.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
