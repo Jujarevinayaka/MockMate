@@ -1,274 +1,159 @@
-go through the full repository and understand in DETAIL what the code is doing. Once you understand, tell me step-by-step what the code does. tell me if there are any issues and how to resolve them.
+✦ Here's a detailed, step-by-step explanation of the functionality of each file in the project:       
 
 
-- Application Name: MockMate
-- Application Description: A web application that helps users prepare for
-    interviews by leveraging the Gemini CLI.
-- Key Features:
-    - General prompt submission to Gemini CLI.
-    - Specialized interview preparation tools (Job Fit Analyzer, Hiring Manager,       
-        Product Manager, Technical Lead, Technical Product Manager, Managerial, HR).     
-    - Streams responses from Gemini CLI in real-time.
-- Technologies Used:
-    - Backend: FastAPI (Python)
-    - Frontend: HTML, Tailwind CSS, JavaScript
-    - AI Integration: Google Gemini CLI
-- Setup Instructions:
-    1. Install Python 3.9+
-    2. Install pipenv: pip install pipenv
-    3. Navigate to the MockMate directory.
-    4. Install dependencies: pipenv install
-    5. Activate the pipenv shell: pipenv shell
-    6. Run the application: uvicorn app.main:app --reload --port 8001
-    7. Ensure the Gemini CLI is installed and configured on your system.
-- Project Structure:
-    - app/main.py: Main FastAPI application, defines API endpoints.
-    - app/services/gemini_service.py: Handles interaction with the Gemini CLI.
-    - app/templates/index.html: Frontend HTML for the web interface.
-    - app/static/: Static files (currently empty, but can hold CSS/JS/images).
-    - app/support/prompt-bank/: Stores various prompts for interview scenarios.        
-    - app/support/jds/: Stores job description markdown files.
-    - app/support/resume/: Stores resume markdown files.
-    - app/requirements.txt: Python dependencies.
-- Known Issues/Limitations:
-    - Requires Gemini CLI to be installed and configured globally on the system.       
-    - Error handling for Gemini CLI communication could be more robust.
-    - Frontend is basic and could be enhanced with more interactive elements and       
-        better styling.
-    - No user authentication or session management.
-    - File paths for JD and Resume are hardcoded to default values in the API
-        endpoints.
-- Future Enhancements:
-    - Allow users to upload their own JD and Resume files.
-    - Implement user authentication and profile management.
-    - Add more interview types and prompt templates.
-    - Improve frontend UI/UX.
-    - Integrate with a database to store user data and interview history.
-    - Implement more sophisticated error handling and logging.
-    - Add unit and integration tests.This project, "MockMate," is a web
-        application built with FastAPI (Python) for the backend and a simple
-        HTML/JavaScript/Tailwind CSS frontend. Its primary purpose is to help users      
-        prepare for interviews by leveraging the Google Gemini CLI.
+  app.py
+  This is the main Flask application that serves as the backend for the MockMate Gemini CLI interface.
+   * Initialization (`GeminiCLIApp.__init__`): Sets up the Flask app, initializes gemini_process and gemini_window to None, defines the      
+     OUTPUT_FILE path (gemini_output.txt), and registers the routes.
+   * Route Registration (`_register_routes`): Maps URL paths to Python functions. Specifically, it maps / to index (for serving the main HTML
+     page) and /send_prompt (for handling user prompts) to send_prompt.
+   * Gemini Window Discovery (`find_gemini_window`): Uses pywinauto to search for an existing command prompt window with "gemini" in its     
+     title and "ConsoleWindowClass" as its class name. This is crucial for connecting to the running Gemini CLI.
+   * Gemini Launch (`launch_gemini`):
+       * First, it attempts to find an already running Gemini window. If found, it focuses on it and returns True.
+       * If not found, it deletes any existing gemini_output.txt file.
+       * It then launches launch_gemini.bat in a new console window using subprocess.Popen.
+       * It waits for up to 15 seconds, repeatedly trying to find and focus on the newly launched Gemini window.
+       * Returns True if the window is found and focused, False otherwise.
+   * Sending Prompts to Gemini (`send_prompt_to_gemini`):
+       * Checks if a Gemini window is connected. If not, it attempts to relaunch.
+       * Sets focus to the Gemini window.
+       * Uses pywinauto.type_keys to type the user's prompt into the Gemini CLI and then presses Enter.
+       * Handles potential errors, such as losing connection to the Gemini window.
+   * Reading Latest Output (`read_latest_output`):
+       * Reads the content of gemini_output.txt.
+       * Compares the current content length with the previously read length (self.prev_len) to identify and return only the new output since
+         the last read. This is used for streaming-like updates.
+   * Index Route (`index`): Renders the index.html template, serving the main web interface to the user.
+   * Send Prompt Route (`send_prompt`):
+       * Receives a JSON payload containing the user's prompt.
+       * Constructs a special instruction string that tells Gemini to write its response into gemini_output.txt. This is critical for        
+         capturing Gemini's output.
+       * Deletes gemini_output.txt before sending a new prompt to ensure a clean slate for the new response.
+       * Calls send_prompt_to_gemini to send the combined instruction and user prompt to the Gemini CLI.
+       * Enters a loop that waits for gemini_output.txt to be created and for new content to appear, with a timeout of 30 seconds and an idle
+         threshold of 10 seconds (if no new output is received for this duration, it assumes the response is complete).
+       * Reads the final content from gemini_output.txt and sends it back to the frontend as a JSON response.
+   * Running the Application (`run`):
+       * Calls launch_gemini to ensure the Gemini CLI is running.
+       * If Gemini launches successfully, it starts the Flask development server on http://127.0.0.1:5000/.
 
 
-Here's a step-by-step breakdown of what the code does:
+  gemini_output.txt
+  This file serves as a temporary communication channel between the Flask backend and the Gemini CLI.
+   * Purpose: The app.py script instructs the Gemini CLI (via the instruction prefix) to write its responses into this file.
+   * Functionality: It acts as a buffer where Gemini's output is captured, allowing the Flask application to read and display it on the web
+     interface. It's cleared before each new prompt to ensure only the latest response is captured.
 
 
-1. Project Structure and Setup:
-    - The project is organized into app/ directory containing the main
-    application logic, services, templates, static files, and support data.    
-    - app/main.py: The core FastAPI application.
-    - app/services/gemini_service.py: Contains the logic for interacting with the
-        Gemini CLI.
-    - app/templates/index.html: The single HTML file for the web interface.      
-    - app/static/: For static assets (currently has a dummy file).
-    - app/support/prompt-bank/: Stores various prompt templates for different    
-    interview scenarios (e.g., Job Fit Analyzer, Hiring Manager).
-    - app/support/jds/: Stores job description files (e.g., Google.md).
-    - app/support/resume/: Stores resume files (e.g., Resume.md).
-    - app/requirements.txt: Lists Python dependencies (fastapi, uvicorn,
-    python-multipart, jinja2).
-    - app-details.txt: Provides metadata about the application, its features,    
-    technologies, setup instructions, and known issues.
+  web/templates/index.html
+  This is the main HTML file that defines the structure of the web-based user interface.
+   * Structure: It sets up a basic web page with a title, includes Tailwind CSS for styling, and links to style.css and script.js.
+   * User Interface:
+       * Displays a "MockMate" heading and a subtitle.
+       * Contains a div with id="chat-container" where chat messages (user prompts and Gemini responses) are dynamically appended.
+       * Includes a form with id="prompt-form" containing an input field (id="prompt-input") for typing messages and a button
+         (id="send-button") to send them.
+   * Styling and Scripting: Integrates Tailwind CSS for responsive and modern design, and links to script.js for interactive functionality.
 
 
-2. Backend (`app/main.py`):
-    - FastAPI Application: Initializes a FastAPI app.
-    - Static Files and Templates: Mounts the static directory and configures     
-    Jinja2Templates to serve index.html.
-    - File Reading Utility: _read_file_content is a helper function to read      
-    content from specified files, raising FileNotFoundError if the file doesn't
-        exist.
-    - Root Endpoint (`/`): Serves the index.html template when a user accesses   
-    the root URL.
-    - General Gemini Prompt Endpoint (`/run-gemini`):
-    - Accepts a prompt from the frontend.
-    - Calls call_gemini_cli from gemini_service.py to send the prompt to the   
-        Gemini CLI.
-    - Streams the response back to the frontend using StreamingResponse        
-        (Server-Sent Events).
-    - Includes basic error handling and logging.
-    - Interview-Specific Endpoints (`/interview/job-fit-analyzer`, 
-    `/interview/hiring-manager`, etc.):
-    - There are multiple endpoints for different interview types (e.g., Job Fit
-        Analyzer, Hiring Manager, Product Manager, Technical Lead, Technical    
-        Product Manager, Managerial, HR).
-    - Each endpoint accepts jd_filename and resume_filename as form data (with 
-        default values "Google.md" and "Resume.md").
-    - It reads a specific prompt template from app/support/prompt-bank/ (e.g., 
-        01_JFA.txt for Job Fit Analyzer).
-    - It reads the content of the specified Job Description (JD) and Resume    
-        files from app/support/jds/ and app/support/resume/ respectively.        
-    - It constructs a full_prompt by combining the prompt template, JD, and    
-        Resume content.
-    - It then calls call_gemini_cli with this full_prompt and streams the      
-        Gemini CLI's response back to the frontend.
-    - Includes robust error handling for FileNotFoundError and other
-        exceptions.
+  web/static/css/style.css
+  This CSS file provides custom styling for the web interface, primarily using Tailwind CSS classes but also adding some specific rules.    
+   * Custom Scrollbar: Defines styles for the scrollbar within the chat-container for a more modern look.
+   * Message Bubbles:
+       * .user-message: Styles for messages sent by the user (blue background, white text, rounded corners, aligned to the right).
+       * .gemini-message: Styles for messages received from Gemini (darker gray background, light gray text, rounded corners, aligned to the
+         left, uses pre-wrap and monospace for code-like formatting).
+       * .message-bubble: Common styles for both user and Gemini messages (padding, margin, box shadow).
+   * Loader: Defines CSS for a spinning loader animation (.loader, .loader-sm, .loader-xs) used to indicate processing.
 
 
-3. Gemini Service (`app/services/gemini_service.py`):
-    - `call_gemini_cli` Function:
-    - This asynchronous function is responsible for interacting with the Gemini
-        CLI.
-    - It constructs the command to run the Gemini CLI (gemini --model 
-        gemini-2.5-flash). On Windows, it uses gemini.cmd.
-    - It uses subprocess.Popen to launch the Gemini CLI as a separate process. 
-    - It sends the user_input to the Gemini CLI's stdin.
-    - It reads stdout and stderr from the Gemini CLI concurrently using        
-        separate threads (stdout_thread, stderr_thread) to prevent blocking.     
-    - It uses an asyncio.Queue to pass chunks of output from the background    
-        threads to the main async function, allowing for real-time streaming.    
-    - It includes a timeout mechanism to prevent the process from running      
-        indefinitely.
-    - It handles FileNotFoundError if the gemini command is not found,
-        providing a helpful error message.
-    - It logs various stages of the process for debugging.
+  support/prompt-bank/meta.txt
+  This file acts as a meta-prompt, providing overarching instructions for how the Gemini CLI should behave when simulating different interview
+   roles.
+   * Context: Explains that the user is a job candidate preparing for interviews and has created a PromptBank folder with seven prompt files, 
+     each defining a specific interview simulation role.
+   * Task: Instructs Gemini to sequentially read and process each of the seven prompt files. It emphasizes parsing the role, waiting for user 
+     input, not executing all prompts at once, and strictly following constraints and output formats.
+   * Start Trigger: Specifies the order in which the prompt files should be processed, starting with 01_JFA.txt, and the trigger phrase       
+     ("Next Prompt") to move to the subsequent file.
+   * Reminder: Reinforces that Gemini should act only as per the prompt instructions in the current file and not summarize, critique, or      
+     modify them.
 
 
-4. Frontend (`app/templates/index.html`):
-    - Basic HTML Structure: Sets up a simple web page with a title, a prompt    
-    input area, a submit button, and areas to display the response and errors.
-    - Tailwind CSS: Uses Tailwind CSS for basic styling.
-    - JavaScript:
-    - Attaches an event listener to the form submission.
-    - Prevents default form submission.
-    - Gets the prompt value from the textarea.
-    - Shows a loader and hides previous response/error messages.
-    - Makes an async fetch POST request to /run-gemini (or other interview    
-        endpoints, though the current JS only targets /run-gemini).
-    - Server-Sent Events (SSE) Handling:
-        - Uses response.body.getReader() to read the streaming response from the
-        backend.
-        - Decodes the chunks and processes them as Server-Sent Events (SSE),    
-        looking for data:  prefixes and \n\n delimiters.
-        - Appends the received data to the response preformatted text area in   
-        real-time.
-    - Handles network errors and server-side errors, displaying them in the   
-        error-container.
-    - Hides the loader when the streaming is complete or an error occurs.     
-
-How the code works step-by-step:
+  support/prompt-bank/*.txt (e.g., 06_HR.txt, 05_Man.txt, 04_TPM.txt, 03_TL.txt, 03_PM.txt, 02_HM.txt, 01_JFA.txt)
+  These files are individual prompt definitions, each outlining a specific interview simulation role for Gemini.
+   * Structure: Each file follows a consistent structure:
+       * `<Role>`: Defines the persona Gemini should adopt (e.g., "Human Resources Interviewer," "Managerial Interviewer," "Senior Technical 
+         Product Manager Interviewer").
+       * `<Context>`: Provides background information about the interview type and its importance.
+       * `<Instructions>`: Details the steps Gemini should follow during the interview, including what information to ask from the user, the 
+         types of questions to ask, how to provide feedback, and what to summarize at the end.
+       * `<Constraints>`: Specifies limitations and rules for Gemini's behavior during the simulation (e.g., "Avoid technical, product, or   
+         managerial questions" for HR).
+       * `<Output_Format>`: Defines the exact structure and content for Gemini's responses during the interview, including feedback sections.
+       * `<User_Input>`: Specifies what information Gemini should request from the user to start the simulation.
+   * Functionality: When meta.txt instructs Gemini to process one of these files, Gemini adopts the defined role and follows the instructions
+     to conduct a mock interview, providing structured feedback based on the specified output format.
 
 
-1. User Interaction: The user opens index.html in their browser. They type a     
-    prompt into the textarea and click "Submit."
-2. Frontend Request: The JavaScript in index.html captures the prompt and sends  
-    it via an async fetch POST request to the /run-gemini endpoint on the FastAPI 
-    backend.
-3. Backend Receives Request: app.main.py receives the POST request at
-    /run-gemini.
-4. Call Gemini Service: The run_gemini (or other interview-specific) endpoint    
-    calls app.services.gemini_service.call_gemini_cli with the user's prompt (or a
-    constructed prompt including JD/Resume content).
-5. Launch Gemini CLI: call_gemini_cli launches the actual Google Gemini CLI as a 
-    subprocess.
-6. Send Input to CLI: The user_input is written to the stdin of the Gemini CLI   
-    process.
-7. Stream Output from CLI: call_gemini_cli continuously reads stdout and stderr  
-    from the Gemini CLI process.
-8. Stream to Frontend: As chunks of output are received from the Gemini CLI,     
-    call_gemini_cli puts them into an asyncio.Queue. The StreamingResponse in     
-    app.main.py then yields these chunks as Server-Sent Events to the frontend.   
-9. Frontend Displays Output: The JavaScript in index.html receives these SSE     
-    chunks, parses them, and appends the data: content to the response area,      
-    providing a real-time streaming experience.
-10. Process Completion/Error: When the Gemini CLI process finishes or encounters 
-    an error, the streaming stops, and any final messages or error details are   
-    sent to the frontend. The loader is then hidden.
-
-Issues and How to Resolve Them:
+  launch_gemini.bat
+  This is a simple Windows batch script used to launch the Gemini CLI.
+   * Command: @echo off suppresses command echoing. gemini --model gemini-2.5-flash --yolo 2>&1 executes the Gemini CLI with specific      
+     parameters:
+       * --model gemini-2.5-flash: Specifies the Gemini model to use.
+       * --yolo: Likely a flag for "You Only Live Once," possibly indicating a non-interactive or single-session mode, or a specific output
+         behavior.
+       * 2>&1: Redirects standard error to standard output, ensuring all output (including errors) goes to the console.
+   * Purpose: This script is called by app.py to start the Gemini CLI in a new console window, allowing the Flask application to interact  
+     with it.
 
 
-1. Hardcoded File Paths for JD/Resume:
-    * Issue: In app/main.py, the jd_filename and resume_filename in the
-        interview endpoints default to "Google.md" and "Resume.md" respectively.  
-        Users cannot currently upload or select their own files through the UI.   
-    * Resolution:
-        * Frontend: Add file input fields (<input type="file">) to index.html   
-            for JD and Resume.
-        * Backend: Modify the interview endpoints to accept uploaded files. This
-            would involve using UploadFile from FastAPI and saving the uploaded  
-            files temporarily or permanently, then reading their content. You'd   
-            also need to update the _read_file_content function or create a new   
-            one to handle uploaded file objects.
-        * Alternative (Simpler): Provide dropdowns in the frontend that list    
-            available JD and Resume files from the jds and resume directories,    
-            allowing users to select existing ones. This would still require a    
-            backend endpoint to list available files.
+  web/static/js/script.js
+  This JavaScript file handles the client-side interactivity of the web interface.
+   * DOM Content Loaded Listener: Ensures the script runs after the HTML document is fully loaded.
+   * Element Selection: Gets references to the form, input field, chat container, and send button.
+   * Welcome Message Removal: Removes the initial "Welcome!" message from the chat container when the user first focuses on the input field.
+   * Form Submission Handler:
+       * Prevents default form submission.
+       * Gets the user's prompt, trims it, and returns if empty.
+       * Disables the input and send button, and shows a small loading spinner on the send button.
+       * Immediately displays the user's message in the chat.
+       * Adds a "Thinking..." placeholder for Gemini's response.
+       * Sends the prompt to the Flask backend (/send_prompt) using fetch (an asynchronous HTTP request).
+       * Upon receiving a response from the backend, it updates the "Thinking..." placeholder with Gemini's actual response.
+       * Handles potential network or server errors.
+       * Re-enables the input and send button, and focuses on the input field.
+   * `addMessage` Function:
+       * Creates a new div element for a message bubble.
+       * Adds CSS classes based on the sender (user or gemini) for styling and alignment.
+       * If isThinking is true, it displays a small loader and "Thinking...".
+       * Otherwise, it wraps the message text in a <pre> tag (to preserve formatting like newlines and spaces) and adds it to the bubble.   
+       * Appends the message bubble to the chat-container and scrolls to the bottom.
+       * Returns the message bubble element, allowing it to be updated later.
+   * `updateMessage` Function: Updates the content of an existing message bubble element with new text, also wrapped in <pre>, and scrolls  
+     the chat to the bottom.
+   * Dynamic Loader Styles: Appends a <style> tag to the document head to define CSS for the small loader animations used in the button and 
+     thinking message.
 
 
-2. Basic Frontend UI/UX:
-    * Issue: The frontend is very basic, lacking advanced styling, interactive 
-        elements, and a clear way to select different interview types.
-    * Resolution:
-        * Styling: Enhance the Tailwind CSS to create a more visually appealing
-            and responsive layout.
-        * Interview Type Selection: Add buttons or a dropdown menu for users to
-            select the desired interview type (Job Fit Analyzer, Hiring Manager, 
-            etc.). When a type is selected, the form submission should target the
-            corresponding FastAPI endpoint (e.g., /interview/job-fit-analyzer).  
-        * Clearer Output: Improve the display of the Gemini CLI's output,      
-            perhaps with syntax highlighting if the output is code, or better    
-            formatting for long text responses.
-        * User Feedback: Provide more explicit feedback to the user during     
-            processing (e.g., "Generating response...", "Analyzing resume...").  
+  support/resume/Resume.md
+  This Markdown file contains a sample resume.
+   * Purpose: It's intended to be used as input for the interview simulation prompts (e.g., by the Job Fit Analyzer, Hiring Manager, or
+     Technical Lead roles) to provide a realistic candidate profile.
+   * Content: Includes sections like Professional Summary, Experience, Education, Skills, Projects, Certifications, and Volunteering,  
+     formatted in Markdown.
 
 
-3. Error Handling for Gemini CLI Communication:
-    * Issue: While there's basic error handling, the gemini_service.py could be 
-        more robust. For example, if the Gemini CLI returns a non-zero exit code  
-        but no stderr output, the error message might be generic. Also, handling  
-        specific Gemini CLI errors (e.g., API key issues, rate limits) could be   
-        improved.
-    * Resolution:
-        * Parse CLI Output: If possible, try to parse the Gemini CLI's stderr   
-            output for specific error codes or messages to provide more
-            informative errors to the user.
-        * Retry Mechanism: Implement a simple retry mechanism for transient     
-            errors (e.g., network issues when calling the Gemini API).
-        * Configuration: Allow users to configure the Gemini CLI path or API key
-            within the application (e.g., via environment variables or a config  
-            file) rather than relying solely on global PATH.
+  support/jds/Google.md
+  This Markdown file contains a sample job description.
+   * Purpose: Similar to Resume.md, this file serves as input for the interview simulation prompts, allowing Gemini to analyze job       
+     requirements against the provided resume.
+   * Content: Describes a "Product Manager, Artificial Intelligence – Google AI" role, including sections like About the Job,
+     Responsibilities, Minimum Qualifications, Preferred Qualifications, The Google AI Product Stack, and What We Offer, formatted in    
+     Markdown.
 
 
-4. No User Authentication or Session Management:
-    * Issue: The application currently has no concept of users, sessions, or
-        storing past interactions.
-    * Resolution:
-        * Authentication: Implement user authentication (e.g., OAuth, simple
-            username/password) using a library like FastAPI Users.
-        * Database Integration: Integrate a database (e.g., SQLite, PostgreSQL)        
-            to store user profiles, interview history, uploaded JDs/Resumes, and
-            past Gemini interactions.
-        * Session Management: Use FastAPI's session management capabilities to
-            maintain user sessions.
-
-
-5. Lack of Tests:
-    * Issue: There are no unit or integration tests for the FastAPI endpoints or
-        the gemini_service.py logic.
-    * Resolution:
-        * Unit Tests: Write unit tests for individual functions (e.g.,
-            _read_file_content, parts of call_gemini_cli) using pytest.
-        * Integration Tests: Write integration tests for the FastAPI endpoints  
-            to ensure they correctly handle requests, call the Gemini service, and
-            return appropriate responses. Mock the call_gemini_cli function      
-            during integration tests to avoid actual CLI calls.
-
-
-6. Potential for Long-Running Processes/Timeouts:
-    * Issue: If the Gemini CLI takes a very long time to respond, the timeout in
-        call_gemini_cli might kill the process, leading to an incomplete
-        response.
-    * Resolution:
-        * User Feedback: Provide more explicit feedback to the user if a timeout
-            occurs, suggesting they try a shorter prompt or check their Gemini   
-            CLI setup.
-        * Configurable Timeout: Make the timeout parameter configurable, perhaps
-            through an environment variable or application setting.
-        * Asynchronous Processing (Advanced): For very long-running tasks,      
-            consider a more robust asynchronous task queue (e.g., Celery with     
-            Redis/RabbitMQ) to run the Gemini CLI calls in the background,        
-            allowing the frontend to poll for results or receive notifications    
-            when complete.
+  In summary, this project sets up a local web interface to interact with the Gemini CLI, allowing users to simulate various interview
+  scenarios by feeding job descriptions and resumes to the AI, which then acts as different interviewers based on predefined prompts. The
+  communication between the web frontend, Flask backend, and Gemini CLI is managed through file I/O and process control.

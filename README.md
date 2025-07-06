@@ -1,63 +1,105 @@
-# MockMate
+# MockMate - Gemini CLI Interview Simulator
 
-MockMate is your personal AI interview coach. It transforms your command-line assistant into a suite of expert interviewers, from hiring managers to technical leads, allowing you to practice for specific job roles. Get realistic, role-specific practice sessions and actionable feedback tailored to your resume and the job you want, helping you build the confidence to ace your next interview.
+MockMate is a web-based application that provides an interactive interface to simulate various job interview scenarios using the Gemini Command Line Interface (CLI). It allows users to practice for interviews by providing job descriptions and resumes, and then interacting with an AI acting as different interviewers (e.g., HR, Hiring Manager, Technical Lead, Product Manager).
 
-## Directory Structure
+## Features
 
-- `app/support/jds/`: **Add your target job description here.**
-- `app/support/prompt-bank/`: Contains prompt templates for different roles, each designed to simulate a specific interview type.
-- `app/support/resume/`: **Add your resume here.**
+*   **Interactive Web Interface**: A user-friendly web UI for sending prompts and receiving responses from the Gemini CLI.
+*   **Interview Role Simulation**: Gemini can act as different interviewers (Job Fit Analyzer, Hiring Manager, Product Manager, Technical Lead, Technical Product Manager, Managerial Interviewer, HR Interviewer) based on predefined prompt files.
+*   **Dynamic Prompting**: The application dynamically sends user inputs and specific instructions to the Gemini CLI, ensuring responses are tailored and captured.
+*   **Real-time Output Display**: Responses from Gemini are streamed and displayed in the web interface as they are generated.
+*   **Configurable Interview Scenarios**: Easily switch between different interview types by leveraging a "prompt bank" of detailed role definitions.
 
-## How to Use MockMate
+## How It Works
 
-MockMate helps you prepare for interviews by simulating various interview scenarios with an AI.
+MockMate consists of a Flask backend, a web frontend, and integrates with the Gemini CLI:
 
-### Steps to Get Started:
+1.  **Flask Backend (`app.py`)**:
+    *   Manages the web server and API endpoints.
+    *   Launches and connects to the Gemini CLI in a separate console window using `pywinauto`.
+    *   Constructs specific instructions for Gemini to write its output to a designated file (`gemini_output.txt`).
+    *   Reads Gemini's responses from `gemini_output.txt` and sends them to the web frontend.
+2.  **Web Frontend (`web/templates/index.html`, `web/static/css/style.css`, `web/static/js/script.js`)**:
+    *   Provides the user interface for inputting prompts and displaying chat messages.
+    *   Uses JavaScript to send user prompts to the Flask backend and update the chat interface with Gemini's responses.
+    *   Styled with Tailwind CSS for a modern look.
+3.  **Gemini CLI Integration**:
+    *   The `launch_gemini.bat` script is used to start the Gemini CLI with specific model and output redirection parameters.
+    *   Gemini processes the instructions and user prompts, writing its responses to `gemini_output.txt`.
+4.  **Prompt Bank (`support/prompt-bank/`)**:
+    *   Contains individual `.txt` files, each defining a specific interviewer role with detailed instructions, constraints, and output formats.
+    *   A `meta.txt` file orchestrates the sequence and flow of these interview simulations.
 
-1.  **Add Your Job Description:** Place the job description you are targeting into the `app/support/jds/` folder. You can replace the existing `Google.md` file or add a new one.
-2.  **Add Your Resume:** Add your own resume to the `app/support/resume/` folder. You can replace the existing `Resume.md` file.
-3.  **Run the Simulations via API:**
-    *   Start the FastAPI application: `uvicorn app.main:app --reload --port 8001`
-    *   Access the API documentation at `http://127.0.0.1:8001/docs` to interact with the endpoints.
-    *   Each interview simulation is now exposed as a dedicated API endpoint. You can send a POST request to these endpoints, optionally specifying the JD and Resume filenames.
+## Setup and Installation
 
-### Available Interview Simulations (API Endpoints):
+To set up and run MockMate, follow these steps:
 
--   **/interview/job-fit-analyzer (Job Fit Analyzer):**
-    *   **Role:** Brutally Honest Job Fit Analyzer.
-    *   **Purpose:** Provides a candid assessment of your job fit by comparing your qualifications against a given job description. It offers an overall fit score, highlights strengths and critical gaps, assesses interview likelihood, and recommends whether to apply, upskill, or look elsewhere.
-    *   **Input:** Full job description and your resume (via `jd_filename` and `resume_filename` form parameters).
+1.  **Prerequisites**:
+    *   Python 3.x
+    *   Flask
+    *   pywinauto
+    *   Gemini CLI (ensure it's installed and accessible from your command line)
+    *   Node.js and npm (for Tailwind CSS, though it's already compiled in `style.css`)
 
--   **/interview/hiring-manager (Hiring Manager):**
-    *   **Role:** First-Round Hiring Manager.
-    *   **Purpose:** Simulates a hiring manager-style mock interview focusing on your experience, communication, initiative, and team fit. You'll be asked open-ended questions, receive feedback after each answer, and get a final summary with a shortlist decision.
-    *   **Input:** Job description and your resume (via `jd_filename` and `resume_filename` form parameters).
+2.  **Clone the Repository**:
+    ```bash
+    git clone <repository_url>
+    cd MockMate/app
+    ```
 
--   **/interview/product-manager (Product Manager):**
-    *   **Role:** Senior Product Manager Interviewer.
-    *   **Purpose:** Conducts a rigorous product interview to assess your product thinking, strategic clarity, customer empathy, and execution ability through scenario-based questions.
-    *   **Input:** Job description and your resume (via `jd_filename` and `resume_filename` form parameters).
+3.  **Install Python Dependencies**:
+    ```bash
+    pip install Flask pywinauto
+    ```
 
--   **/interview/technical-lead (Technical Lead):**
-    *   **Role:** Senior Technical Lead Interviewer.
-    *   **Purpose:** Conducts a rigorous technical interview to assess core technical capabilities, including problem-solving, coding, system design, architectural thinking, and collaboration.
-    *   **Input:** Job description, your resume/technical background (via `jd_filename` and `resume_filename` form parameters).
+4.  **Ensure Gemini CLI is Configured**:
+    Make sure your Gemini CLI is correctly installed and authenticated. The `launch_gemini.bat` script expects the `gemini` command to be available in your system's PATH.
 
--   **/interview/technical-product-manager (Technical Product Manager):**
-    *   **Role:** Senior Technical Product Manager Interviewer.
-    *   **Purpose:** Provides a deep-dive TPM interview to evaluate your product sense, technical fluency, and cross-functional leadership, focusing on technical decision-making and platform thinking.
-    *   **Input:** Job description and your resume (via `jd_filename` and `resume_filename` form parameters).
+## Usage
 
--   **/interview/managerial (Managerial Interviewer):**
-    *   **Role:** Managerial Interviewer.
-    *   **Purpose:** Assesses your ability to lead, manage ambiguity, handle pressure, and drive outcomes through people, focusing on leadership competencies and behavioral aspects.
-    *   **Input:** Job description and your resume (via `jd_filename` and `resume_filename` form parameters).
+1.  **Start the Application**:
+    Navigate to the `app` directory in your terminal and run:
+    ```bash
+    python app.py
+    ```
+    This will launch the Flask server and attempt to start the Gemini CLI.
 
--   **/interview/hr (HR Interviewer):**
-    *   **Role:** Human Resources Interviewer.
-    *   **Purpose:** Simulates a final HR screening round to evaluate cultural fit, motivation, compensation alignment, communication skills, and ethical awareness.
-    *   **Input:** Job description, your resume, preferred location, and compensation expectations (via `jd_filename` and `resume_filename` form parameters).
+2.  **Access the Web Interface**:
+    Open your web browser and go to `http://127.0.0.1:5000/`.
 
-## Contributing
+3.  **Start an Interview Simulation**:
+    The application will guide you to provide a job description and your resume (e.g., by referencing the sample files in `support/jds/` and `support/resume/`). Gemini will then begin the interview simulation based on the `meta.txt` and individual prompt files.
 
-Contributions are welcome! Please refer to the project's guidelines for contributing.
+4.  **Interact with Gemini**:
+    Type your responses into the input field and press "Send". Gemini will provide feedback and ask follow-up questions according to the active interviewer role.
+
+## File Structure
+
+```
+MockMate/app/
+├── app.py                  # Flask backend application
+├── gemini_output.txt       # Temporary file for Gemini CLI output
+├── launch_gemini.bat       # Batch script to launch Gemini CLI
+├── support/
+│   ├── jds/
+│   │   └── Google.md       # Sample Job Description
+│   ├── prompt-bank/
+│   │   ├── 01_JFA.txt      # Job Fit Analyzer prompt
+│   │   ├── 02_HM.txt       # Hiring Manager prompt
+│   │   ├── 03_PM.txt      # Product Manager prompt
+│   │   ├── 03_TL.txt       # Technical Lead prompt
+│   │   ├── 04_TPM.txt      # Technical Product Manager prompt
+│   │   ├── 05_Man.txt      # Managerial Interviewer prompt
+│   │   ├── 06_HR.txt       # HR Interviewer prompt
+│   │   └── meta.txt        # Meta-prompt for orchestrating interviews
+│   └── resume/
+│       └── Resume.md       # Sample Resume
+└── web/
+    ├── static/
+    │   ├── css/
+    │   │   └── style.css   # Custom CSS for the web UI
+    │   └── js/
+    │       └── script.js   # Frontend JavaScript for interactivity
+    └── templates/
+        └── index.html      # Main HTML template for the web UI
+```
