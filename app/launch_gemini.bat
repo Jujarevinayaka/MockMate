@@ -1,2 +1,2 @@
 @echo off
-gemini --model gemini-2.5-flash >> gemini_output.txt 2>&1
+gemini --model gemini-2.5-flash --yolo 2>&1

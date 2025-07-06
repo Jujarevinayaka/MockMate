@@ -32,6 +32,8 @@
     align-self: flex-start;
     border-radius: 1.25rem 1.25rem 1.25rem 0.25rem;
     white-space: pre-wrap;
+    font-family: monospace;
+    word-wrap: normal;
 }
 
 .message-bubble {

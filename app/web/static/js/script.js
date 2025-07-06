@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isThinking) {
             messageBubble.innerHTML = '<div class="flex items-center gap-2"><div class="loader-xs"></div><span>Thinking...</span></div>';
         } else {
-            messageBubble.textContent = text;
+            messageBubble.innerHTML = '<pre>' + text + '</pre>';
         }
 
         messageWrapper.appendChild(messageBubble);
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateMessage(element, newText) {
-        element.innerHTML = newText; // Using innerHTML to allow for formatted responses if ever needed
+        element.innerHTML = '<pre>' + newText + '</pre>'; // Using innerHTML to allow for formatted responses if ever needed
         chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 });
